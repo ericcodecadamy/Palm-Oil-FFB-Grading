@@ -13,6 +13,7 @@ Run with:
 """
 
 import io
+import os
 import json
 import base64
 import logging
@@ -281,8 +282,42 @@ app.add_middleware(
 
 
 # ─── Startup ──────────────────────────────────────────────────────────────────
+def _maybe_download_model() -> None:
+    """Download model from Hugging Face Hub if not present locally.
+
+    Set HF_MODEL_REPO=username/repo-name in the environment (e.g. on Render).
+    Optional: set HF_TOKEN for private repos.
+    """
+    if MODEL_PATH.exists():
+        return
+
+    hf_repo = os.getenv("HF_MODEL_REPO", "")
+    if not hf_repo:
+        return
+
+    try:
+        from huggingface_hub import hf_hub_download
+    except ImportError:
+        log.warning("huggingface_hub not installed — cannot auto-download model.")
+        return
+
+    log.info(f"Model not found locally. Downloading from HF Hub: {hf_repo} ...")
+    MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        hf_hub_download(
+            repo_id=hf_repo,
+            filename="best_model.pth",
+            local_dir=str(MODEL_PATH.parent),
+            token=os.getenv("HF_TOKEN") or None,
+        )
+        log.info(f"Model downloaded to {MODEL_PATH}")
+    except Exception as e:
+        log.error(f"Failed to download model from HF Hub: {e}")
+
+
 @app.on_event("startup")
 async def startup_event():
+    _maybe_download_model()
     predictor.load()
     log.info("🚀 Server ready.")
 

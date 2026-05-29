@@ -8,6 +8,7 @@ torchvision>=0.16.0
 # Vision Foundation Models (DINOv2, DINOv3)
 transformers>=4.51.0
 accelerate>=0.24.0
+huggingface_hub>=0.23.0
 
 # Web Framework
 fastapi>=0.110.0

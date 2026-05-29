@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: palm-oil-ffb-predictor
+    runtime: python
+    region: singapore          # closest to Malaysia; change to oregon/frankfurt if needed
+
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+
+    # Render free tier = 512 MB RAM (fine for EfficientNet-B2, ~30 MB model)
+    # Upgrade to "standard" ($25/mo) if using DINOv2 (needs ~2 GB RAM)
+    plan: free
+
+    envVars:
+      # --- Required: tell the app where to fetch best_model.pth at startup ---
+      - key: HF_MODEL_REPO
+        value: YOUR_HF_USERNAME/palm-oil-ffb-predictor   # update this
+
+      # --- Optional: set in Render dashboard, not here (keep token private) ---
+      # - key: HF_TOKEN
+      #   sync: false   # mark as secret in Render dashboard
