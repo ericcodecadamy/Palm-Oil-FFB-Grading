@@ -14,7 +14,7 @@ services:
     envVars:
       # --- Required: tell the app where to fetch best_model.pth at startup ---
       - key: HF_MODEL_REPO
-        value: YOUR_HF_USERNAME/palm-oil-ffb-predictor   # update this
+        value: ericcodecadamy/palm-oil-ffb-predictor   # update this
 
       # --- Optional: set in Render dashboard, not here (keep token private) ---
       # - key: HF_TOKEN
