@@ -1,0 +1,127 @@
+{
+  "efficientnet_b0": {
+    "model_name": "efficientnet_b0",
+    "best_val_acc": 0.7915194346289752,
+    "training_time_s": 980.7765207290649,
+    "params": 4011391,
+    "epochs": 40,
+    "freeze_epochs": 5,
+    "patience": 8,
+    "batch_size": 32,
+    "lr": 0.0003,
+    "weight_decay": 0.005,
+    "class_names": [
+      "overripe",
+      "ripe",
+      "unripe"
+    ],
+    "img_size": 224,
+    "minority_class": "overripe",
+    "imbalance_fixes": [
+      "WeightedRandomSampler",
+      "Weighted CrossEntropyLoss",
+      "PerClassAugDataset (minority heavy augment)",
+      "RandomErasing"
+    ]
+  },
+  "efficientnet_b1": {
+    "model_name": "efficientnet_b1",
+    "best_val_acc": 0.7752650176678445,
+    "training_time_s": 1003.8557136058807,
+    "params": 6517027,
+    "epochs": 40,
+    "freeze_epochs": 5,
+    "patience": 8,
+    "batch_size": 32,
+    "lr": 0.0003,
+    "weight_decay": 0.005,
+    "class_names": [
+      "overripe",
+      "ripe",
+      "unripe"
+    ],
+    "img_size": 240,
+    "minority_class": "overripe",
+    "imbalance_fixes": [
+      "WeightedRandomSampler",
+      "Weighted CrossEntropyLoss",
+      "PerClassAugDataset (minority heavy augment)",
+      "RandomErasing"
+    ]
+  },
+  "efficientnet_b2": {
+    "model_name": "efficientnet_b2",
+    "best_val_acc": 0.8141342756183746,
+    "training_time_s": 1385.7362461090088,
+    "params": 7705221,
+    "epochs": 40,
+    "freeze_epochs": 5,
+    "patience": 8,
+    "batch_size": 32,
+    "lr": 0.0003,
+    "weight_decay": 0.005,
+    "class_names": [
+      "overripe",
+      "ripe",
+      "unripe"
+    ],
+    "img_size": 260,
+    "minority_class": "overripe",
+    "imbalance_fixes": [
+      "WeightedRandomSampler",
+      "Weighted CrossEntropyLoss",
+      "PerClassAugDataset (minority heavy augment)",
+      "RandomErasing"
+    ]
+  },
+  "dinov2": {
+    "model_name": "dinov2",
+    "best_val_acc": 0.8614840989399293,
+    "training_time_s": 1708.1637163162231,
+    "params": 86582787,
+    "epochs": 40,
+    "freeze_epochs": 5,
+    "patience": 8,
+    "batch_size": 32,
+    "lr": 5e-05,
+    "weight_decay": 0.005,
+    "class_names": [
+      "overripe",
+      "ripe",
+      "unripe"
+    ],
+    "img_size": 224,
+    "minority_class": "overripe",
+    "imbalance_fixes": [
+      "WeightedRandomSampler",
+      "Weighted CrossEntropyLoss",
+      "PerClassAugDataset (minority heavy augment)",
+      "RandomErasing"
+    ]
+  },
+  "dinov3": {
+    "model_name": "dinov3",
+    "best_val_acc": 0.7646643109540636,
+    "training_time_s": 1227.147697210312,
+    "params": 21597699,
+    "epochs": 40,
+    "freeze_epochs": 5,
+    "patience": 8,
+    "batch_size": 32,
+    "lr": 5e-05,
+    "weight_decay": 0.005,
+    "class_names": [
+      "overripe",
+      "ripe",
+      "unripe"
+    ],
+    "img_size": 224,
+    "minority_class": "overripe",
+    "imbalance_fixes": [
+      "WeightedRandomSampler",
+      "Weighted CrossEntropyLoss",
+      "PerClassAugDataset (minority heavy augment)",
+      "RandomErasing"
+    ]
+  }
+}

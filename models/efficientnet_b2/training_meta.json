@@ -1,0 +1,25 @@
+{
+  "model_name": "efficientnet_b2",
+  "best_val_acc": 0.8141342756183746,
+  "training_time_s": 1385.7362461090088,
+  "params": 7705221,
+  "epochs": 40,
+  "freeze_epochs": 5,
+  "patience": 8,
+  "batch_size": 32,
+  "lr": 0.0003,
+  "weight_decay": 0.005,
+  "class_names": [
+    "overripe",
+    "ripe",
+    "unripe"
+  ],
+  "img_size": 260,
+  "minority_class": "overripe",
+  "imbalance_fixes": [
+    "WeightedRandomSampler",
+    "Weighted CrossEntropyLoss",
+    "PerClassAugDataset (minority heavy augment)",
+    "RandomErasing"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "model_name": "dinov2",
+  "best_val_acc": 0.8614840989399293,
+  "training_time_s": 1708.1637163162231,
+  "params": 86582787,
+  "epochs": 40,
+  "freeze_epochs": 5,
+  "patience": 8,
+  "batch_size": 32,
+  "lr": 5e-05,
+  "weight_decay": 0.005,
+  "class_names": [
+    "overripe",
+    "ripe",
+    "unripe"
+  ],
+  "img_size": 224,
+  "minority_class": "overripe",
+  "imbalance_fixes": [
+    "WeightedRandomSampler",
+    "Weighted CrossEntropyLoss",
+    "PerClassAugDataset (minority heavy augment)",
+    "RandomErasing"
+  ]
+}

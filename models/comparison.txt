@@ -1,0 +1,12 @@
+MODEL COMPARISON RESULTS
+==================================================================
+Model                    Val Acc       Params   Train Time
+------------------------------------------------------------------
+efficientnet_b0            0.7915     4,011,391        16.3m
+efficientnet_b1            0.7753     6,517,027        16.7m
+efficientnet_b2            0.8141     7,705,221        23.1m
+dinov2                     0.8615    86,582,787        28.5m  <- BEST
+dinov3                     0.7647    21,597,699        20.5m
+
+Best: dinov2  val_acc=0.8615
+Checkpoint: models/dinov2/best_model.pth

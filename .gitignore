@@ -1,0 +1,60 @@
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# ─── Virtual Environment ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+.env/
+
+# ─── Environment / Secrets ───────────────────────────────────────────────────
+# Never commit credentials or API keys
+.env
+.env.*
+!.env.example
+*.key
+kaggle.json
+secrets.json
+
+# ─── Training Data ───────────────────────────────────────────────────────────
+# Raw and processed datasets — large & licensed (Kaggle / Roboflow ToS)
+data/
+dataset/
+
+# ─── Model Weights ───────────────────────────────────────────────────────────
+# .pth files are large binaries (16 MB – 331 MB); use Git LFS or cloud storage
+models/**/*.pth
+
+# Keep comparison charts, training plots, and metadata (small, informative)
+!models/**/training_curves.png
+!models/**/confusion_matrix.png
+!models/**/training_meta.json
+!models/comparison.json
+!models/comparison.png
+!models/comparison.txt
+
+# ─── IDE / OS ─────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ─── WSL / Windows Metadata ───────────────────────────────────────────────────
+*.Zone.Identifier
+*.lnk
+
+# ─── Jupyter ─────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ─── Build / Distribution ────────────────────────────────────────────────────
+dist/
+build/
+*.egg-info/
+.eggs/

@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="theme-color" content="#ffffff"/>
+  <title>FFB Ripeness AI — Palm Oil Classifier</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+/* ── Reset ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Tokens ───────────────────────────────────────────────────────────────── */
+:root {
+  --bg:         #f1f5f9;
+  --surface:    #ffffff;
+  --surface2:   #f8fafc;
+  --border:     #e2e8f0;
+  --border2:    #cbd5e1;
+  --text:       #0f172a;
+  --muted:      #64748b;
+  --dim:        #94a3b8;
+  --accent:     #2563eb;
+  --accent-bg:  #eff6ff;
+  --green:      #16a34a;
+  --green-bg:   #f0fdf4;
+  --green-bd:   #bbf7d0;
+  --yellow:     #b45309;
+  --yellow-bg:  #fffbeb;
+  --yellow-bd:  #fde68a;
+  --red:        #dc2626;
+  --red-bg:     #fef2f2;
+  --red-bd:     #fecaca;
+  --shadow-xs:  0 1px 2px rgba(0,0,0,.05);
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow:     0 4px 12px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-md:  0 10px 24px rgba(0,0,0,.08), 0 4px 8px rgba(0,0,0,.04);
+  --r-sm:       6px;
+  --r:          10px;
+  --r-lg:       14px;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100dvh;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-xs);
+}
+.header-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #15803d, #166534);
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.brand-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+.brand-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.status-pill {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 0.73rem;
+  font-weight: 500;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--dim);
+  transition: background .4s, box-shadow .4s;
+  flex-shrink: 0;
+}
+.status-dot.ok   { background: #22c55e; box-shadow: 0 0 0 2px #dcfce7; }
+.status-dot.warn { background: var(--red); box-shadow: 0 0 0 2px var(--red-bg); }
+
+/* ── Page wrapper ─────────────────────────────────────────────────────────── */
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+}
+
+/* ── Tab bar (underline style) ────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+  gap: 0;
+}
+.tab-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .2s, border-color .2s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-icon { font-size: 0.95rem; }
+
+/* ── Panel ────────────────────────────────────────────────────────────────── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── Two-column layout (upload panel) ────────────────────────────────────── */
+.split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 640px) {
+  .split-grid { grid-template-columns: 1fr; }
+  .page { padding: 16px 14px 48px; }
+  .header-inner { padding: 0 14px; }
+}
+
+/* ── Card ─────────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.card-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--dim);
+  letter-spacing: 0.03em;
+}
+.card-body { padding: 18px; }
+
+/* ── Drop zone ────────────────────────────────────────────────────────────── */
+.drop-zone {
+  position: relative;
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--r);
+  padding: 36px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface2);
+  transition: all .2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+.drop-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.drop-icon { font-size: 2.2rem; opacity: .55; transition: opacity .2s; }
+.drop-zone:hover .drop-icon, .drop-zone.drag-over .drop-icon { opacity: 1; }
+.drop-zone h3 { font-size: .9rem; font-weight: 600; color: var(--text); }
+.drop-zone p  { font-size: .78rem; color: var(--muted); }
+.format-row { display: flex; gap: 5px; justify-content: center; margin-top: 4px; }
+.fmt-tag {
+  font-size: .65rem; font-weight: 600;
+  padding: 2px 7px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--dim);
+  letter-spacing: .03em;
+}
+
+/* ── Preview ──────────────────────────────────────────────────────────────── */
+.preview-wrap {
+  display: none;
+  position: relative;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 4/3;
+  margin-top: 12px;
+}
+.preview-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.preview-clear {
+  position: absolute; top: 8px; right: 8px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,.15);
+  color: #fff; font-size: .78rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.preview-clear:hover { background: rgba(220,38,38,.8); }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: .875rem; font-weight: 600; font-family: inherit;
+  cursor: pointer;
+  transition: all .15s;
+  width: 100%;
+  letter-spacing: -.01em;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(37,99,235,.35);
+}
+.btn-primary:hover:not(:disabled) { background: #1d4ed8; box-shadow: 0 4px 12px rgba(37,99,235,.35); transform: translateY(-1px); }
+.btn-primary:active:not(:disabled) { transform: translateY(0); }
+.btn-outline {
+  background: #fff;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover:not(:disabled) { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+.btn-danger {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid var(--red-bd);
+}
+.btn-danger:hover:not(:disabled) { background: #fee2e2; }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+.btn-row { display: flex; gap: 8px; margin-top: 12px; }
+.btn-row .btn { width: auto; flex: 1; }
+.mt { margin-top: 12px; }
+
+/* ── Spinner ──────────────────────────────────────────────────────────────── */
+.loading {
+  display: none; align-items: center; justify-content: center; gap: 9px;
+  padding: 14px; color: var(--muted); font-size: .84rem;
+}
+.loading.showing { display: flex; }
+.spin-ring {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .65s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Result placeholder ───────────────────────────────────────────────────── */
+.result-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  padding: 48px 20px;
+  min-height: 280px;
+}
+.placeholder-icon { font-size: 2.4rem; opacity: .35; margin-bottom: 14px; }
+.placeholder-title { font-size: .95rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+.placeholder-sub   { font-size: .8rem; color: var(--dim); max-width: 220px; line-height: 1.5; }
+
+/* ── Result card ──────────────────────────────────────────────────────────── */
+.result-card {
+  display: none;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  background: #fff;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: rise .3s cubic-bezier(.22,1,.36,1);
+}
+@keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+
+.result-top {
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.result-visual {
+  flex-shrink: 0;
+  position: relative;
+  width: 84px; height: 84px;
+}
+.result-ring { width: 84px; height: 84px; }
+.ring-bg   { stroke: #f1f5f9; }
+.ring-fill { transition: stroke-dashoffset .8s cubic-bezier(.4,0,.2,1); stroke-linecap: round; }
+.ring-pct {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.ring-num {
+  font-size: 1rem; font-weight: 800; line-height: 1;
+}
+.ring-lbl {
+  font-size: .52rem; font-weight: 600;
+  color: var(--dim);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.result-info { flex: 1; min-width: 0; }
+.result-emoji { font-size: 1.8rem; line-height: 1; margin-bottom: 3px; }
+.result-class { font-size: 1.45rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin-bottom: 5px; }
+.result-desc  { font-size: .8rem; color: var(--muted); line-height: 1.5; }
+
+.result-action {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 22px;
+  border-top: 1px solid var(--border);
+  font-size: .8rem;
+  line-height: 1.5;
+}
+.action-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.action-text { color: var(--muted); }
+.action-text b { color: var(--text); }
+
+.result-bars-section {
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--border);
+}
+.section-label {
+  font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  color: var(--dim);
+  margin-bottom: 12px;
+}
+.score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.score-row:last-child { margin-bottom: 0; }
+.score-name {
+  font-size: .78rem; font-weight: 500;
+  width: 64px; flex-shrink: 0;
+  text-transform: capitalize;
+  color: var(--muted);
+}
+.score-name.winner { color: var(--text); font-weight: 700; }
+.score-track {
+  flex: 1;
+  background: var(--border);
+  border-radius: 100px; height: 7px; overflow: hidden;
+}
+.score-fill { height: 100%; border-radius: 100px; transition: width .75s cubic-bezier(.4,0,.2,1); width: 0%; }
+.score-pct  { font-size: .76rem; font-weight: 500; width: 36px; text-align: right; color: var(--muted); }
+.result-footer {
+  padding: 12px 22px;
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+/* ── Alert ────────────────────────────────────────────────────────────────── */
+.alert {
+  display: none; align-items: flex-start; gap: 9px;
+  padding: 12px 14px;
+  border-radius: var(--r);
+  font-size: .82rem; line-height: 1.5;
+  margin-top: 12px;
+}
+.alert.showing { display: flex; }
+.alert.error {
+  background: var(--red-bg);
+  border: 1px solid var(--red-bd);
+  color: #b91c1c;
+}
+.alert-icon { font-size: .95rem; flex-shrink: 0; margin-top: 1px; }
+
+/* ── Camera ───────────────────────────────────────────────────────────────── */
+.cam-wrap {
+  position: relative;
+  aspect-ratio: 16/9;
+  background: #0f172a;
+  border-radius: var(--r);
+  overflow: hidden;
+}
+#webcam { width: 100%; height: 100%; object-fit: cover; display: block; transform: scaleX(-1); }
+.cam-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(15,23,42,.82);
+  backdrop-filter: blur(4px);
+  gap: 12px; text-align: center; padding: 24px;
+}
+.cam-overlay-icon { font-size: 2.6rem; opacity: .6; }
+.cam-overlay h3 { font-size: .95rem; font-weight: 600; color: #f8fafc; }
+.cam-overlay p  { font-size: .8rem;  color: #94a3b8; max-width: 240px; }
+
+/* Corner brackets */
+.cam-brackets { position: absolute; inset: 0; pointer-events: none; }
+.cam-brackets::before, .cam-brackets::after,
+.cam-brackets span::before, .cam-brackets span::after {
+  content: '';
+  position: absolute;
+  width: 22px; height: 22px;
+  border-color: rgba(59,130,246,.7);
+  border-style: solid;
+}
+.cam-brackets::before  { top:12px; left:12px;  border-width:2px 0 0 2px; border-radius:3px 0 0 0; }
+.cam-brackets::after   { top:12px; right:12px; border-width:2px 2px 0 0; border-radius:0 3px 0 0; }
+.cam-brackets span::before { bottom:12px; left:12px;  border-width:0 0 2px 2px; border-radius:0 0 0 3px; }
+.cam-brackets span::after  { bottom:12px; right:12px; border-width:0 2px 2px 0; border-radius:0 0 3px 0; }
+
+.live-badge {
+  display: none;
+  position: absolute; top:10px; left:10px;
+  background: rgba(220,38,38,.88);
+  color: #fff; font-size: .62rem; font-weight: 700;
+  letter-spacing: .07em; padding: 3px 9px;
+  border-radius: 100px;
+  animation: livepulse 1.6s infinite;
+}
+@keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+/* Live overlay at bottom of camera */
+.live-strip {
+  display: none;
+  position: absolute; bottom:0; left:0; right:0;
+  background: linear-gradient(0deg, rgba(0,0,0,.9) 0%, transparent 100%);
+  padding: 32px 16px 14px;
+  flex-direction: column; gap: 8px;
+}
+.live-strip.showing { display: flex; }
+.live-strip-top { display: flex; align-items: center; gap: 12px; }
+.live-emoji-big { font-size: 1.8rem; line-height: 1; }
+.live-class { font-size: 1.15rem; font-weight: 800; letter-spacing: -.02em; color: #fff; }
+.live-conf-text { font-size: .72rem; color: rgba(255,255,255,.55); margin-top: 1px; }
+.live-mini-bars { display: flex; flex-direction: column; gap: 4px; }
+.mini-bar-row { display: flex; align-items: center; gap: 8px; }
+.mini-bar-name { font-size: .68rem; width: 56px; color: rgba(255,255,255,.5); text-transform: capitalize; }
+.mini-bar-track { flex:1; background:rgba(255,255,255,.15); border-radius:100px; height:4px; overflow:hidden; }
+.mini-bar-fill  { height:100%; border-radius:100px; transition:width .3s; }
+.mini-bar-pct   { font-size:.66rem; width:30px; text-align:right; color:rgba(255,255,255,.45); }
+
+#fps-label { font-size: .68rem; color: var(--dim); }
+
+/* ── Model info row ───────────────────────────────────────────────────────── */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  margin-top: 20px;
+  box-shadow: var(--shadow-xs);
+}
+@media (max-width: 640px) { .info-grid { grid-template-columns: repeat(2, 1fr); } }
+.info-cell { background: #fff; padding: 14px 16px; }
+.info-cell-label {
+  font-size: .65rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  color: var(--dim); margin-bottom: 4px;
+}
+.info-cell-value { font-size: .88rem; font-weight: 600; color: var(--text); }
+.info-cell-value.green { color: var(--green); }
+  </style>
+</head>
+<body>
+
+<!-- ─── Header ────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="logo">🌴</div>
+      <div>
+        <div class="brand-title">FFB Ripeness AI</div>
+        <div class="brand-sub">Palm Oil Fresh Fruit Bunch Classifier</div>
+      </div>
+    </div>
+    <div class="status-pill">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">Connecting…</span>
+    </div>
+  </div>
+</header>
+
+<!-- ─── Page ──────────────────────────────────────────────────────────────── -->
+<div class="page">
+
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="upload" onclick="switchTab('upload')">
+      <span class="tab-icon">🖼️</span> Upload Image
+    </button>
+    <button class="tab-btn" data-tab="realtime" onclick="switchTab('realtime')">
+      <span class="tab-icon">📷</span> Live Camera
+    </button>
+  </div>
+
+  <!-- ══ UPLOAD ════════════════════════════════════════════════════════════ -->
+  <div id="panel-upload" class="panel active">
+    <div class="split-grid">
+
+      <!-- Left: Input -->
+      <div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Select Image</span>
+            <span class="card-badge">JPG · PNG · WEBP</span>
+          </div>
+          <div class="card-body">
+            <div class="drop-zone" id="upload-area"
+                 ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+              <input type="file" id="file-input" accept="image/*" onchange="onFileSelect(event)"/>
+              <span class="drop-icon">📂</span>
+              <h3>Drop a photo here</h3>
+              <p>or click to browse your device</p>
+              <div class="format-row">
+                <span class="fmt-tag">JPG</span>
+                <span class="fmt-tag">PNG</span>
+                <span class="fmt-tag">WEBP</span>
+                <span class="fmt-tag">BMP</span>
+              </div>
+            </div>
+
+            <div class="preview-wrap" id="preview-container">
+              <img id="preview-img" src="" alt="Preview"/>
+              <button class="preview-clear" onclick="clearUpload()" title="Remove">✕</button>
+            </div>
+
+            <button class="btn btn-primary mt" id="btn-predict" onclick="predict()" disabled>
+              🔍 Analyze Ripeness
+            </button>
+
+            <div class="loading" id="upload-spinner">
+              <div class="spin-ring"></div>
+              Analyzing with AI model…
+            </div>
+
+            <div class="alert error" id="upload-error">
+              <span class="alert-icon">⚠️</span>
+              <span id="upload-error-msg"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Result -->
+      <div>
+        <!-- Placeholder -->
+        <div class="card" id="result-placeholder-card">
+          <div class="result-placeholder">
+            <div class="placeholder-icon">🔬</div>
+            <div class="placeholder-title">Ready to Analyze</div>
+            <p class="placeholder-sub">Upload a palm oil FFB image to receive an instant ripeness prediction and harvest recommendation.</p>
+          </div>
+        </div>
+
+        <!-- Result card -->
+        <div class="result-card" id="upload-result">
+          <div class="result-top">
+            <div class="result-visual">
+              <svg class="result-ring" viewBox="0 0 84 84" fill="none">
+                <circle class="ring-bg"   cx="42" cy="42" r="35" stroke-width="6.5"/>
+                <circle class="ring-fill" id="ring-fill" cx="42" cy="42" r="35"
+                        stroke-width="6.5"
+                        stroke-dasharray="219.91"
+                        stroke-dashoffset="219.91"
+                        transform="rotate(-90 42 42)"/>
+              </svg>
+              <div class="ring-pct">
+                <span class="ring-num" id="ring-num">—</span>
+                <span class="ring-lbl">conf</span>
+              </div>
+            </div>
+            <div class="result-info">
+              <div class="result-emoji" id="res-emoji"></div>
+              <div class="result-class" id="res-label"></div>
+              <div class="result-desc"  id="res-desc"></div>
+            </div>
+          </div>
+
+          <div class="result-action" id="res-action">
+            <span class="action-icon" id="action-icon">💡</span>
+            <span class="action-text" id="action-text"></span>
+          </div>
+
+          <div class="result-bars-section">
+            <p class="section-label">Confidence breakdown</p>
+            <div id="res-bars"></div>
+          </div>
+
+          <div class="result-footer">
+            <button class="btn btn-outline" onclick="clearUpload()" style="width:auto;">
+              ↩ Analyze another image
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /split-grid -->
+  </div><!-- /panel-upload -->
+
+  <!-- ══ CAMERA ════════════════════════════════════════════════════════════ -->
+  <div id="panel-realtime" class="panel">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Live Camera Feed</span>
+        <span class="card-badge" id="fps-label">Stopped</span>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:14px;">
+        <div class="cam-wrap">
+          <video id="webcam" autoplay playsinline muted></video>
+          <div class="cam-brackets"><span></span></div>
+          <span class="live-badge" id="live-badge">● LIVE</span>
+          <div class="cam-overlay" id="webcam-overlay">
+            <div class="cam-overlay-icon">📷</div>
+            <h3>Camera not started</h3>
+            <p>Press <strong>Start Camera</strong> to begin real-time detection</p>
+          </div>
+          <div class="live-strip" id="live-result">
+            <div class="live-strip-top">
+              <div class="live-emoji-big" id="live-emoji"></div>
+              <div>
+                <div class="live-class" id="live-label"></div>
+                <div class="live-conf-text" id="live-conf"></div>
+              </div>
+            </div>
+            <div class="live-mini-bars" id="live-bars"></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-start-cam" onclick="startCamera()">▶ Start Camera</button>
+          <button class="btn btn-danger"  id="btn-stop-cam"  onclick="stopCamera()" disabled>■ Stop</button>
+        </div>
+      </div>
+    </div>
+    <div class="alert error" id="cam-error">
+      <span class="alert-icon">⚠️</span>
+      <span id="cam-error-msg"></span>
+    </div>
+  </div>
+
+  <!-- ══ MODEL INFO ═════════════════════════════════════════════════════════ -->
+  <div class="info-grid">
+    <div class="info-cell">
+      <div class="info-cell-label">Architecture</div>
+      <div class="info-cell-value" id="info-arch">—</div>
+    </div>
+    <div class="info-cell">
+      <div class="info-cell-label">Val Accuracy</div>
+      <div class="info-cell-value green" id="info-acc">—</div>
+    </div>
+    <div class="info-cell">
+      <div class="info-cell-label">Device</div>
+      <div class="info-cell-value" id="info-device">—</div>
+    </div>
+    <div class="info-cell">
+      <div class="info-cell-label">Classes</div>
+      <div class="info-cell-value" id="info-classes">—</div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<canvas id="capture-canvas" style="display:none"></canvas>
+
+<script>
+const CLASS_COLORS = { unripe:'#16a34a', ripe:'#b45309', overripe:'#dc2626' };
+const RING_CIRC    = 219.91;  // 2π × 35
+
+const ACTIONS = {
+  unripe:   { icon:'🌱', html:'<b>Not ready for harvest.</b> Continue monitoring — typically 7–14 more days to peak ripeness.' },
+  ripe:     { icon:'✅', html:'<b>Harvest now</b> for optimal CPO yield and quality. Oil content is at its peak.' },
+  overripe: { icon:'⚡', html:'<b>Harvest immediately.</b> Oil quality is degrading rapidly — further delay reduces yield.' },
+};
+
+let stream = null, liveInterval = null, isLivePredicting = false;
+let selectedFile = null, frameCount = 0, lastFpsTime = Date.now();
+
+function switchTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`panel-${tab}`).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+}
+
+async function init() {
+  try {
+    const [health, info] = await Promise.all([
+      fetch('/health').then(r => r.json()),
+      fetch('/model-info').then(r => r.json()),
+    ]);
+    const dot = document.getElementById('status-dot');
+    const txt = document.getElementById('status-text');
+    if (health.model_loaded) {
+      dot.className = 'status-dot ok';
+      txt.textContent = `Ready · ${(health.device||'').toUpperCase()}`;
+    } else {
+      dot.className = 'status-dot warn';
+      txt.textContent = 'Model not loaded';
+    }
+    const rawArch = info.model_name || info.training?.model_name || 'unknown';
+    const arch = rawArch
+      .replace('efficientnet_b', 'EfficientNet-B')
+      .replace('dinov2','DINOv2').replace('dinov3','DINOv3');
+    const acc  = info.val_acc ? `${(info.val_acc*100).toFixed(2)}%` : '—';
+    const dev  = (info.device||'—').toUpperCase();
+    const cls  = (info.classes||[]).map(c=>c.charAt(0).toUpperCase()+c.slice(1)).join(' · ');
+    document.getElementById('info-arch').textContent    = arch;
+    document.getElementById('info-acc').textContent     = acc;
+    document.getElementById('info-device').textContent  = dev;
+    document.getElementById('info-classes').textContent = cls;
+  } catch {
+    document.getElementById('status-dot').className = 'status-dot warn';
+    document.getElementById('status-text').textContent = 'Server unreachable';
+  }
+}
+init();
+
+/* ── Camera ──────────────────────────────────────────────────────────────── */
+async function startCamera() {
+  hideAlert('cam-error');
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode:{ ideal:'environment' }, width:{ ideal:1280 } }, audio:false,
+    });
+    document.getElementById('webcam').srcObject = stream;
+    document.getElementById('webcam-overlay').style.display = 'none';
+    document.getElementById('live-badge').style.display     = 'block';
+    document.getElementById('btn-start-cam').disabled = true;
+    document.getElementById('btn-stop-cam').disabled  = false;
+    document.getElementById('fps-label').textContent  = 'Live';
+    liveInterval = setInterval(predictFromWebcam, 650);
+  } catch(err) {
+    showAlert('cam-error', `Camera error: ${err.message}`);
+  }
+}
+
+function stopCamera() {
+  clearInterval(liveInterval); liveInterval = null;
+  if (stream) { stream.getTracks().forEach(t=>t.stop()); stream = null; }
+  document.getElementById('webcam').srcObject = null;
+  document.getElementById('webcam-overlay').style.display = '';
+  document.getElementById('live-badge').style.display     = 'none';
+  document.getElementById('live-result').classList.remove('showing');
+  document.getElementById('btn-start-cam').disabled = false;
+  document.getElementById('btn-stop-cam').disabled  = true;
+  document.getElementById('fps-label').textContent  = 'Stopped';
+}
+
+async function predictFromWebcam() {
+  if (isLivePredicting) return;
+  isLivePredicting = true;
+  const video = document.getElementById('webcam');
+  const canvas = document.getElementById('capture-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = video.videoWidth||320; canvas.height = video.videoHeight||240;
+  ctx.save(); ctx.scale(-1,1); ctx.drawImage(video,-canvas.width,0,canvas.width,canvas.height); ctx.restore();
+  try {
+    const resp = await fetch('/predict-base64',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ image: canvas.toDataURL('image/jpeg',.8) }),
+    });
+    if (resp.ok) {
+      updateLiveResult(await resp.json());
+      frameCount++;
+      const now = Date.now();
+      if (now-lastFpsTime >= 2000) {
+        document.getElementById('fps-label').textContent =
+          `${(frameCount/((now-lastFpsTime)/1000)).toFixed(1)} fps`;
+        frameCount=0; lastFpsTime=now;
+      }
+    }
+  } catch {}
+  isLivePredicting = false;
+}
+
+function updateLiveResult(data) {
+  const color = CLASS_COLORS[data.prediction]||'#64748b';
+  document.getElementById('live-emoji').textContent = data.emoji||'';
+  const lbl = document.getElementById('live-label');
+  lbl.textContent = data.label||data.prediction; lbl.style.color = color;
+  document.getElementById('live-conf').textContent = `${(data.confidence*100).toFixed(1)}% confidence`;
+  const bars = document.getElementById('live-bars');
+  bars.innerHTML='';
+  Object.entries(data.all_scores||{}).sort((a,b)=>b[1]-a[1]).forEach(([cls,s])=>{
+    const pct=(s*100).toFixed(1);
+    bars.insertAdjacentHTML('beforeend',`
+      <div class="mini-bar-row">
+        <span class="mini-bar-name">${cls}</span>
+        <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%;background:${CLASS_COLORS[cls]||'#64748b'}"></div></div>
+        <span class="mini-bar-pct">${pct}%</span>
+      </div>`);
+  });
+  document.getElementById('live-result').classList.add('showing');
+}
+
+/* ── Upload ──────────────────────────────────────────────────────────────── */
+function onFileSelect(e){ const f=e.target.files[0]; if(f) setFile(f); }
+function onDragOver(e){ e.preventDefault(); document.getElementById('upload-area').classList.add('drag-over'); }
+function onDragLeave()  { document.getElementById('upload-area').classList.remove('drag-over'); }
+function onDrop(e){
+  e.preventDefault();
+  document.getElementById('upload-area').classList.remove('drag-over');
+  const f=e.dataTransfer.files[0]; if(f&&f.type.startsWith('image/')) setFile(f);
+}
+document.addEventListener('paste', e=>{
+  const item=[...e.clipboardData.items].find(i=>i.type.startsWith('image/'));
+  if(item){ switchTab('upload'); setFile(item.getAsFile()); }
+});
+
+function setFile(file) {
+  selectedFile=file;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('preview-container').style.display='block';
+    document.getElementById('upload-result').style.display='none';
+    document.getElementById('result-placeholder-card').style.display='';
+    hideAlert('upload-error');
+  };
+  reader.readAsDataURL(file);
+  document.getElementById('btn-predict').disabled=false;
+}
+
+function clearUpload(){
+  selectedFile=null;
+  document.getElementById('file-input').value='';
+  document.getElementById('preview-container').style.display='none';
+  document.getElementById('preview-img').src='';
+  document.getElementById('upload-result').style.display='none';
+  document.getElementById('result-placeholder-card').style.display='';
+  document.getElementById('btn-predict').disabled=true;
+  hideAlert('upload-error');
+}
+
+async function predict(){
+  if(!selectedFile) return;
+  const btn     = document.getElementById('btn-predict');
+  const spinner = document.getElementById('upload-spinner');
+  btn.disabled=true;
+  spinner.classList.add('showing');
+  document.getElementById('upload-result').style.display='none';
+  hideAlert('upload-error');
+  try {
+    const fd=new FormData(); fd.append('file',selectedFile);
+    const resp=await fetch('/predict',{method:'POST',body:fd});
+    if(!resp.ok){
+      const err=await resp.json().catch(()=>({detail:resp.statusText}));
+      throw new Error(err.detail?.message||err.detail||'Prediction failed');
+    }
+    showUploadResult(await resp.json());
+  } catch(err){ showAlert('upload-error', err.message); }
+  finally { spinner.classList.remove('showing'); btn.disabled=false; }
+}
+
+document.addEventListener('keydown', e=>{
+  if(e.key==='Enter' && selectedFile && !document.getElementById('btn-predict').disabled) predict();
+});
+
+function showUploadResult(data) {
+  const color = CLASS_COLORS[data.prediction]||'#64748b';
+  const conf  = data.confidence||0;
+  const pctTxt= `${(conf*100).toFixed(1)}%`;
+
+  const card = document.getElementById('upload-result');
+  // Color-coded left border
+  const bgMap = { unripe: '#f0fdf4', ripe: '#fffbeb', overripe: '#fef2f2' };
+  const bdMap = { unripe: '#bbf7d0', ripe: '#fde68a', overripe: '#fecaca' };
+  card.style.background   = bgMap[data.prediction] || '#fff';
+  card.style.borderColor  = bdMap[data.prediction] || '#e2e8f0';
+  card.style.display      = 'block';
+
+  document.getElementById('result-placeholder-card').style.display='none';
+
+  // Ring animation
+  const ring = document.getElementById('ring-fill');
+  ring.style.stroke = color;
+  setTimeout(()=>{ ring.style.strokeDashoffset = RING_CIRC*(1-conf); }, 30);
+  const numEl = document.getElementById('ring-num');
+  numEl.textContent = pctTxt;
+  numEl.style.color = color;
+
+  // Text
+  document.getElementById('res-emoji').textContent = data.emoji||'';
+  const lbl = document.getElementById('res-label');
+  lbl.textContent = data.label||data.prediction; lbl.style.color = color;
+  document.getElementById('res-desc').textContent  = data.description||'';
+
+  // Action
+  const act = ACTIONS[data.prediction]||{icon:'💡',html:'See breakdown below.'};
+  document.getElementById('action-icon').textContent = act.icon;
+  document.getElementById('action-text').innerHTML   = act.html;
+
+  // Bars
+  const barsEl = document.getElementById('res-bars');
+  barsEl.innerHTML='';
+  Object.entries(data.all_scores||{}).sort((a,b)=>b[1]-a[1]).forEach(([cls,score])=>{
+    const pct=(score*100).toFixed(1);
+    const winner=cls===data.prediction;
+    barsEl.insertAdjacentHTML('beforeend',`
+      <div class="score-row">
+        <span class="score-name${winner?' winner':''}">${cls}</span>
+        <div class="score-track"><div class="score-fill" style="width:${pct}%;background:${CLASS_COLORS[cls]||'#64748b'}"></div></div>
+        <span class="score-pct">${pct}%</span>
+      </div>`);
+  });
+
+  setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'nearest'}),80);
+}
+
+function showAlert(id, msg){
+  const el=document.getElementById(id);
+  const msgEl=document.getElementById(`${id}-msg`);
+  if(msgEl) msgEl.textContent=msg; else el.textContent=`⚠️ ${msg}`;
+  el.classList.add('showing');
+}
+function hideAlert(id){ document.getElementById(id).classList.remove('showing'); }
+</script>
+</body>
+</html>
