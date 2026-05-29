@@ -17,6 +17,7 @@ import os
 import json
 import base64
 import logging
+import threading
 from pathlib import Path
 from typing import Optional
 
@@ -29,7 +30,7 @@ from PIL import Image, UnidentifiedImageError
 import numpy as np
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -317,9 +318,16 @@ def _maybe_download_model() -> None:
 
 @app.on_event("startup")
 async def startup_event():
-    _maybe_download_model()
-    predictor.load()
-    log.info("🚀 Server ready.")
+    # Load model in background so uvicorn binds to the port immediately.
+    # Render's port scanner times out if startup blocks for > ~90 seconds.
+    # The app returns 503 for /predict until the model is ready.
+    def _background_load():
+        _maybe_download_model()
+        predictor.load()
+        log.info("🚀 Model ready.")
+
+    threading.Thread(target=_background_load, daemon=True).start()
+    log.info("🚀 Server ready (model loading in background).")
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
@@ -329,6 +337,11 @@ async def serve_ui():
         raise HTTPException(status_code=404,
                             detail="Frontend not found. Check static/index.html")
     return HTMLResponse(content=INDEX_HTML.read_text(encoding="utf-8"))
+
+
+@app.head("/")
+async def head_ui():
+    return Response(status_code=200)
 
 
 @app.get("/health")
